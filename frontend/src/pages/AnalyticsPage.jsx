@@ -167,7 +167,7 @@ export default function AnalyticsPage() {
             <BarChart data={sectorLR} layout="vertical" barSize={22} margin={{ left: 130 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis type="number" unit="%" tick={{ fontSize:11, fill:"#94a3b8" }} />
-              <YAxis type="category" dataKey="sector" tick={{ fontSize:11, fill:"#6b7280" }} width:125 />
+              <YAxis type="category" dataKey="sector" tick={{ fontSize:11, fill:"#6b7280" }} width:{125} />
               <Tooltip formatter={v => [`${v}%`, "Avg LR"]} />
               <Bar dataKey="avg_lr" name="Avg LR %" radius={[0,4,4,0]}>
                 {sectorLR.map((r, i) => (
