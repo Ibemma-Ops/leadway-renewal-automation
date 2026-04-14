@@ -177,7 +177,7 @@ class AuditLogOut(BaseModel):
     policy_id: Optional[int]
     action: str
     description: Optional[str]
-    metadata: Optional[Any]
+    event_metadata: Optional[Any]
     ip_address: Optional[str]
     created_at: datetime
     user: Optional[UserOut] = None
