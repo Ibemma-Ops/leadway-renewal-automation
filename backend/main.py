@@ -16,7 +16,7 @@ from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.audit_users import audit_router, users_router
 
 # Create tables on startup
-Base.metadata.create_all(bind=engine)
+Base.event_metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Leadway MRAS API",
