@@ -81,7 +81,7 @@ async def upload_excel(
     db.refresh(batch)
 
     log_action(db, "INGESTION_COMPLETE", user_id=current_user.id,
-               metadata={
+               event_metadata={
                    "batch_id": batch.id,
                    "processed": batch.processed_records,
                    "failed": batch.failed_records,
