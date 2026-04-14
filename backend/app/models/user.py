@@ -27,5 +27,9 @@ class User(Base):
 
     # Relationships
     audit_logs = relationship("AuditLog", back_populates="user")
-    approvals = relationship("ApprovalWorkflow", back_populates="approver")
+    approvals = relationship(
+    "ApprovalWorkflow",
+    foreign_keys="ApprovalWorkflow.actor_id",
+    back_populates="actor"
+)
     uploads = relationship("UploadBatch", back_populates="uploaded_by_user")
