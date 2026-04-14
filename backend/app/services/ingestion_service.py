@@ -364,15 +364,15 @@ REQUIRED_COLUMNS = {
 }
 
 SHEET_TYPES = {
-    "Corporate": PolicyType.CORPORATE,
-    "corporate": PolicyType.CORPORATE,
-    "CORPORATE": PolicyType.CORPORATE,
-    "Retail": PolicyType.RETAIL,
-    "retail": PolicyType.RETAIL,
-    "RETAIL": PolicyType.RETAIL,
-    "TPA": PolicyType.TPA,
-    "tpa": PolicyType.TPA,
-    "Tpa": PolicyType.TPA,
+    "Corporate": "CORPORATE",
+    "corporate": "CORPORATE",
+    "CORPORATE": "CORPORATE",
+    "Retail": "RETAIL",
+    "retail": "RETAIL",
+    "RETAIL": "RETAIL",
+    "TPA": "TPA",
+    "tpa": "TPA",
+    "Tpa": "TPA",
 }
 
 
