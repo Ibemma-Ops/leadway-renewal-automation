@@ -142,7 +142,7 @@ async def update_policy(
     db.refresh(p)
     if changes:
         log_action(db, "POLICY_UPDATED", user_id=current_user.id,
-                   policy_id=policy_id, metadata={"changes": changes},
+                   policy_id=policy_id, event_metadata={"changes": changes},
                    ip_address=request.client.host)
     return p
 
