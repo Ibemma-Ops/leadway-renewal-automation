@@ -27,12 +27,16 @@ api.interceptors.response.use(
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 export const authAPI = {
-  login: (email, password) => {
-    const form = new FormData();
-    form.append("username", email);
-    form.append("password", password);
-    return api.post("/auth/login", form, { headers: { "Content-Type": "multipart/form-data" } });
-  },
+ login: (email, password) => {
+  const form = new URLSearchParams();
+  form.append("grant_type", "password");
+  form.append("username", email);
+  form.append("password", password);
+
+  return api.post("/auth/login", form, {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
+},
   me:        ()     => api.get("/auth/me"),
   register:  (data) => api.post("/auth/register", data),
   seedAdmin: ()     => api.post("/auth/seed-admin"),
