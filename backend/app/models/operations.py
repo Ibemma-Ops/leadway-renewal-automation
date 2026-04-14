@@ -65,7 +65,11 @@ class ApprovalWorkflow(Base):
     created_at    = Column(DateTime(timezone=True), server_default=func.now())
 
     policy   = relationship("RenewalPolicy", back_populates="approval_workflows")
-    actor    = relationship("User", foreign_keys=[actor_id])
+    actor = relationship(
+    "User",
+    foreign_keys=[actor_id],
+    back_populates="approvals"
+)
 
 
 class AuditLog(Base):
