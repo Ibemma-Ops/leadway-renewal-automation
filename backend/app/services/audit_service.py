@@ -9,7 +9,7 @@ def log_action(
     user_id: Optional[int] = None,
     policy_id: Optional[int] = None,
     description: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    event_metadata: Optional[Dict[str, Any]] = None,
     ip_address: Optional[str] = None,
 ):
     """Create an audit log entry."""
@@ -18,7 +18,7 @@ def log_action(
         policy_id=policy_id,
         action=action,
         description=description,
-        metadata=metadata or {},
+        event_metadata=event_metadata or {},
         ip_address=ip_address,
     )
     db.add(entry)
