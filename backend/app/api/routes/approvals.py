@@ -147,7 +147,7 @@ async def action_approval_step(
         policy.renewal_status = RenewalStatus.REJECTED
         log_action(db, "APPROVAL_REJECTED", user_id=current_user.id, policy_id=policy.id,
                    description=f"Step {step.step_type.value} rejected by {current_user.role.value}",
-                   metadata={"comments": payload.comments}, ip_address=request.client.host)
+                   event_metadata={"comments": payload.comments}, ip_address=request.client.host)
 
     elif action == "ACKNOWLEDGE":
         if step.step_type != ApprovalStepType.UNDERWRITER_ACKNOWLEDGEMENT:
@@ -160,7 +160,7 @@ async def action_approval_step(
         _advance_or_complete(policy, step, db)
         log_action(db, "UNDERWRITER_ACKNOWLEDGED", user_id=current_user.id, policy_id=policy.id,
                    description="Underwriter acknowledged concession rationale",
-                   metadata={"rationale": payload.concession_rationale}, ip_address=request.client.host)
+                   event_metadata={"rationale": payload.concession_rationale}, ip_address=request.client.host)
 
     elif action == "APPROVE":
         step.status = ApprovalStepStatus.APPROVED
@@ -177,7 +177,7 @@ async def action_approval_step(
         log_action(db, f"STEP_APPROVED_{step.step_type.value}", user_id=current_user.id,
                    policy_id=policy.id,
                    description=f"{step.step_type.value} approved by {current_user.role.value}",
-                   metadata={"comments": payload.comments,
+                   event_metadata={"comments": payload.comments,
                               "new_policy_status": policy.renewal_status.value},
                    ip_address=request.client.host)
     else:
