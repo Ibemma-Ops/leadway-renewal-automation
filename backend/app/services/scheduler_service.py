@@ -65,4 +65,4 @@ def check_renewal_triggers():
 
 def _audit(db, policy_id, action, desc):
     db.add(AuditLog(policy_id=policy_id, action=action, description=desc,
-                    metadata={"source": "scheduler"}))
+                    event_metadata={"source": "scheduler"}))
