@@ -76,7 +76,7 @@ class AuditLog(Base):
     policy_id  = Column(Integer, ForeignKey("renewal_policies.id"), nullable=True)
     action     = Column(String, nullable=False)
     description = Column(Text)
-    metadata   = Column(JSON)
+    event_metadata   = Column(JSON)
     ip_address = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
