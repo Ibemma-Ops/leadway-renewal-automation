@@ -36,22 +36,22 @@ export default function LoginPage() {
         <div className="absolute top-0 right-0 h-72 w-72 rounded-full bg-brand-orange/20 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-brand-red/20 blur-3xl" />
 
-        <div className="relative z-10 flex w-full flex-col justify-between p-12 xl:p-16">
-          <div className="flex items-center gap-4">
-            <div className="bg-white rounded-2xl px-3 py-2 shadow-card-md">
-              <img
-                src={logo}
-                alt="Leadway Health"
-                className="h-10 w-auto object-contain"
-              />
-            </div>
-            <div>
-              <p className="text-lg font-semibold">Leadway Health</p>
-              <p className="text-sm text-white/70">Insurance Limited</p>
-            </div>
-          </div>
-
+        <div className="relative z-10 flex w-full items-center p-12 xl:p-16">
           <div className="max-w-xl">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="bg-white rounded-2xl px-3 py-2 shadow-card-md">
+                <img
+                  src={logo}
+                  alt="Leadway Health"
+                  className="h-10 w-auto object-contain"
+                />
+              </div>
+              <div>
+                <p className="text-lg font-semibold">Leadway Health</p>
+                <p className="text-sm text-white/70">Insurance Limited</p>
+              </div>
+            </div>
+
             <p className="mb-4 inline-flex rounded-full bg-brand-white/10 px-4 py-1 text-xs font-medium tracking-wide text-white/80">
               Internal Operations Platform
             </p>
@@ -61,10 +61,7 @@ export default function LoginPage() {
               <br />
               Automation System
             </h1>
-
-          <p className="text-sm text-white/60">
-            © {new Date().getFullYear()} Leadway Health Insurance Limited
-          </p>
+          </div>
         </div>
       </div>
 
