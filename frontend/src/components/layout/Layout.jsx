@@ -119,9 +119,13 @@ export default function Layout() {
           </div>
         </header>
 
-       <main className="flex-1 p-6 overflow-auto">
-  <div style={{ background: "white", padding: "20px", color: "black", borderRadius: "12px" }}>
-    OUTLET IS WORKING
-  </div>
-  <Outlet />
-</main>
+               <main className="flex-1 p-6 overflow-auto">
+          <div style={{ background: "white", padding: "20px", color: "black", borderRadius: "12px" }}>
+            OUTLET IS WORKING
+          </div>
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
