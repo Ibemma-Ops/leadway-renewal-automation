@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   FileText,
@@ -25,7 +25,7 @@ const navItems = [
   { to: "/users", label: "Users", icon: Users },
 ];
 
-export default function Layout() {
+export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -36,7 +36,6 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
       <aside className="w-72 bg-brand-black text-brand-white flex flex-col border-r border-white/10 shadow-2xl">
         <div className="px-6 py-6 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -101,7 +100,6 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="h-20 bg-brand-white border-b border-gray-200 px-8 flex items-center justify-between shadow-sm">
           <div>
@@ -119,7 +117,7 @@ export default function Layout() {
           </div>
         </header>
 
-              <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-6 overflow-auto">
           {children}
         </main>
       </div>
