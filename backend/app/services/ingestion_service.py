@@ -53,8 +53,14 @@ SHEET_SEGMENTS: Dict[str, PolicySegment] = {
     for k in keys
 }
 
-REQUIRED_COLS = ["policy_number", "company_name", "current_premium",
-                 "total_claims", "total_premium", "end_date"]
+REQUIRED_COLS = [
+    "policy_number",
+    "company_name",
+    "current_premium",
+    "total_claims",
+    "total_premium",
+    "end_date",
+]
 
 
 def _normalise_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -127,9 +133,13 @@ def ingest_excel(
     uploaded_by: int,
 ) -> Dict[str, Any]:
     results = {
-        "total": 0, "processed": 0, "failed": 0,
-        "tpa_routed": 0, "flagged": 0,
-        "errors": [], "warnings": [],
+        "total": 0,
+        "processed": 0,
+        "failed": 0,
+        "tpa_routed": 0,
+        "flagged": 0,
+        "errors": [],
+        "warnings": [],
     }
 
     try:
@@ -156,7 +166,6 @@ def ingest_excel(
             df = _normalise_columns(df)
             df = df.dropna(subset=["policy_number", "company_name"])
 
-            # Validate required columns
             missing = [c for c in REQUIRED_COLS if c not in df.columns]
             if missing:
                 results["errors"].append(
@@ -182,31 +191,28 @@ def ingest_excel(
                         continue
 
                     current_premium = _parse_float(row.get("current_premium"), 0)
-                    total_claims    = _parse_float(row.get("total_claims"), 0)
-                    total_premium   = _parse_float(row.get("total_premium"), current_premium)
-                    end_date        = _parse_date(row.get("end_date"))
-                    start_date      = _parse_date(row.get("start_date"))
+                    total_claims = _parse_float(row.get("total_claims"), 0)
+                    total_premium = _parse_float(row.get("total_premium"), current_premium)
+                    end_date = _parse_date(row.get("end_date"))
+                    start_date = _parse_date(row.get("start_date"))
 
                     if not end_date:
                         raise ValueError("Invalid or missing end_date")
 
-                    # Workbook-supplied LR/COR for discrepancy check
-                    wb_lr_raw  = row.get("workbook_lr")
+                    wb_lr_raw = row.get("workbook_lr")
                     wb_cor_raw = row.get("workbook_cor")
-                    workbook_lr  = _parse_float(wb_lr_raw) if wb_lr_raw is not None else None
+                    workbook_lr = _parse_float(wb_lr_raw) if wb_lr_raw is not None else None
                     workbook_cor = _parse_float(wb_cor_raw) if wb_cor_raw is not None else None
-                    # Normalise: if supplied as percentage (e.g. 82.0) convert to decimal
+
                     if workbook_lr is not None and workbook_lr > 5:
                         workbook_lr /= 100.0
                     if workbook_cor is not None and workbook_cor > 5:
                         workbook_cor /= 100.0
 
-                    # Other optional fields
-                    has_customised  = _parse_bool(row.get("has_customised_benefit"))
-                    anti_selection  = _parse_bool(row.get("anti_selection"))
-                    adopted_cohort  = _parse_bool(row.get("adopted_enrollee_cohort"))
+                    has_customised = _parse_bool(row.get("has_customised_benefit"))
+                    anti_selection = _parse_bool(row.get("anti_selection"))
+                    adopted_cohort = _parse_bool(row.get("adopted_enrollee_cohort"))
 
-                    # ── TPA: route away from automated pipeline ───────────
                     if segment == PolicySegment.TPA:
                         policy = RenewalPolicy(
                             batch_id=batch_id,
@@ -237,12 +243,15 @@ def ingest_excel(
                         db.flush()
                         results["tpa_routed"] += 1
                         results["processed"] += 1
-                        log_action(db, "TPA_ROUTED", user_id=uploaded_by,
-                                   policy_id=policy.id,
-                                   description=f"TPA policy {policy_number} routed to TPA desk")
+                        log_action(
+                            db,
+                            "TPA_ROUTED",
+                            user_id=uploaded_by,
+                            policy_id=policy.id,
+                            description=f"TPA policy {policy_number} routed to TPA desk",
+                        )
                         continue
 
-                    # ── Non-TPA: compute metrics ──────────────────────────
                     metrics = compute_metrics(
                         total_claims=total_claims,
                         total_premium=total_premium,
@@ -252,7 +261,6 @@ def ingest_excel(
                         workbook_cor=workbook_cor,
                     )
 
-                    # Build risk flags
                     risk_flags: List[str] = []
                     if metrics["discrepancy_flagged"]:
                         risk_flags.append(RiskFlag.LR_COR_DISCREPANCY.value)
@@ -277,18 +285,16 @@ def ingest_excel(
                         segment=segment.value,
                     )
 
-                    # Determine initial renewal_status from approval route
                     first_step = (rate_info["approval_steps"] or ["SALES_CONFIRMATION"])[0]
                     status_map = {
-                        "SALES_CONFIRMATION":          RenewalStatus.AWAITING_SALES_CONFIRMATION,
-                        "UNDERWRITER_APPROVAL":        RenewalStatus.AWAITING_UNDERWRITER_APPROVAL,
+                        "SALES_CONFIRMATION": RenewalStatus.AWAITING_SALES_CONFIRMATION,
+                        "UNDERWRITER_APPROVAL": RenewalStatus.AWAITING_UNDERWRITER_APPROVAL,
                         "UNDERWRITER_ACKNOWLEDGEMENT": RenewalStatus.AWAITING_UNDERWRITER_ACKNOWLEDGEMENT,
-                        "HBD_APPROVAL":                RenewalStatus.AWAITING_HBD_APPROVAL,
-                        "MD_CEO_CONCURRENCE":          RenewalStatus.AWAITING_MD_CEO_CONCURRENCE,
+                        "HBD_APPROVAL": RenewalStatus.AWAITING_HBD_APPROVAL,
+                        "MD_CEO_CONCURRENCE": RenewalStatus.AWAITING_MD_CEO_CONCURRENCE,
                     }
                     initial_status = status_map.get(first_step, RenewalStatus.PENDING)
 
-                    # Discrepancy-flagged records go to Underwriter even if COR is low
                     if metrics["discrepancy_flagged"]:
                         initial_status = RenewalStatus.AWAITING_UNDERWRITER_ACKNOWLEDGEMENT
                         if RiskFlag.LR_COR_DISCREPANCY.value not in risk_flags:
@@ -329,9 +335,8 @@ def ingest_excel(
                         renewal_status=initial_status,
                     )
                     db.add(policy)
-                    db.flush()   # get policy.id
+                    db.flush()
 
-                    # Create approval workflow steps
                     if rate_info["approval_steps"]:
                         _create_approval_steps(policy, rate_info["approval_steps"], db)
 
@@ -345,192 +350,6 @@ def ingest_excel(
 
         except Exception as sheet_err:
             results["errors"].append(f"Sheet '{sheet_name}' error: {sheet_err}")
-
-    db.commit()
-    return results
-
-
-REQUIRED_COLUMNS = {
-    "policy_number": ["policy_number", "policy no", "policy_no", "policy number"],
-    "company_name": ["company_name", "company name", "client name", "client_name"],
-    "current_premium": ["current_premium", "current premium", "premium", "annual premium"],
-    "total_claims": ["total_claims", "total claims", "claims", "claims amount"],
-    "total_premium": ["total_premium", "total premium", "written premium"],
-    "renewal_date": ["renewal_date", "renewal date", "expiry date", "expiry_date"],
-    "contact_email": ["contact_email", "email", "contact email", "client email"],
-    "contact_name": ["contact_name", "contact name", "contact person"],
-    "phone": ["phone", "phone number", "mobile", "telephone"],
-    "inception_date": ["inception_date", "inception date", "start date", "commencement date"],
-}
-
-SHEET_TYPES = {
-    "Corporate": "CORPORATE",
-    "corporate": "CORPORATE",
-    "CORPORATE": "CORPORATE",
-    "Retail": "RETAIL",
-    "retail": "RETAIL",
-    "RETAIL": "RETAIL",
-    "TPA": "TPA",
-    "tpa": "TPA",
-    "Tpa": "TPA",
-}
-
-
-def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Normalize column names to standard format."""
-    col_map = {}
-    df_cols_lower = {c.lower().strip(): c for c in df.columns}
-
-    for standard_col, aliases in REQUIRED_COLUMNS.items():
-        for alias in aliases:
-            if alias.lower() in df_cols_lower:
-                col_map[df_cols_lower[alias.lower()]] = standard_col
-                break
-
-    return df.rename(columns=col_map)
-
-
-def validate_dataframe(df: pd.DataFrame, sheet_name: str) -> Tuple[bool, List[str]]:
-    """Validate required columns exist."""
-    errors = []
-    required = ["policy_number", "company_name", "current_premium", "total_claims",
-                "total_premium", "renewal_date"]
-    for col in required:
-        if col not in df.columns:
-            errors.append(f"Sheet '{sheet_name}': Missing required column '{col}'")
-    return len(errors) == 0, errors
-
-
-def parse_date(val) -> date:
-    if pd.isna(val):
-        return None
-    if isinstance(val, (date, datetime)):
-        return val.date() if isinstance(val, datetime) else val
-    try:
-        return pd.to_datetime(str(val)).date()
-    except Exception:
-        return None
-
-
-def ingest_excel(
-    file_path: str,
-    db: Session,
-    batch_id: int,
-    uploaded_by: int,
-) -> Dict[str, Any]:
-    """
-    Parse all sheets from the Excel file and store policies in DB.
-    Returns summary dict with counts and errors.
-    """
-    results = {
-        "total": 0,
-        "processed": 0,
-        "failed": 0,
-        "errors": [],
-        "warnings": [],
-    }
-
-    try:
-        xl = pd.ExcelFile(file_path)
-    except Exception as e:
-        results["errors"].append(f"Cannot open file: {str(e)}")
-        return results
-
-    parsed_sheets = []
-    for sheet_name in xl.sheet_names:
-        policy_type = SHEET_TYPES.get(sheet_name)
-        if policy_type is None:
-            results["warnings"].append(f"Skipping unrecognized sheet: '{sheet_name}'")
-            continue
-        parsed_sheets.append((sheet_name, policy_type))
-
-    if not parsed_sheets:
-        results["errors"].append(
-            "No recognized sheets found. Expected: Corporate, Retail, TPA"
-        )
-        return results
-
-    for sheet_name, policy_type in parsed_sheets:
-        try:
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
-            df = normalize_columns(df)
-            valid, errors = validate_dataframe(df, sheet_name)
-            if not valid:
-                results["errors"].extend(errors)
-                continue
-
-            # Drop empty rows
-            df = df.dropna(subset=["policy_number", "company_name"])
-
-            for _, row in df.iterrows():
-                results["total"] += 1
-                try:
-                    policy_number = str(row.get("policy_number", "")).strip()
-                    if not policy_number:
-                        raise ValueError("Empty policy number")
-
-                    # Check for duplicate
-                    existing = db.query(RenewalPolicy).filter(
-                        RenewalPolicy.policy_number == policy_number
-                    ).first()
-                    if existing:
-                        results["warnings"].append(
-                            f"Policy {policy_number} already exists — skipping"
-                        )
-                        results["failed"] += 1
-                        continue
-
-                    current_premium = float(row.get("current_premium", 0) or 0)
-                    total_claims = float(row.get("total_claims", 0) or 0)
-                    total_premium = float(row.get("total_premium", 0) or current_premium)
-                    renewal_date = parse_date(row.get("renewal_date"))
-
-                    if not renewal_date:
-                        raise ValueError(f"Invalid renewal_date for policy {policy_number}")
-
-                    metrics = compute_metrics(
-                        total_claims=total_claims,
-                        total_premium=total_premium,
-                        renewal_date=renewal_date,
-                    )
-                    rate_info = compute_renewal_rate(
-                        loss_ratio=metrics["loss_ratio"],
-                        cor=metrics["combined_operating_ratio"],
-                        current_premium=current_premium,
-                    )
-
-                    policy = RenewalPolicy(
-                        batch_id=batch_id,
-                        policy_number=policy_number,
-                        company_name=str(row.get("company_name", "")).strip(),
-                        policy_type=policy_type,
-                        contact_email=str(row.get("contact_email", "") or "").strip() or None,
-                        contact_name=str(row.get("contact_name", "") or "").strip() or None,
-                        phone=str(row.get("phone", "") or "").strip() or None,
-                        current_premium=current_premium,
-                        total_claims=total_claims,
-                        total_premium=total_premium,
-                        inception_date=parse_date(row.get("inception_date")),
-                        renewal_date=renewal_date,
-                        days_to_renewal=metrics["days_to_renewal"],
-                        loss_ratio=metrics["loss_ratio"],
-                        combined_operating_ratio=metrics["combined_operating_ratio"],
-                        renewal_rate_pct=rate_info["renewal_rate_pct"],
-                        renewal_premium=rate_info["renewal_premium"],
-                        rate_band=rate_info["rate_band"],
-                        requires_approval=rate_info["requires_approval"],
-                    )
-                    db.add(policy)
-                    results["processed"] += 1
-
-                except Exception as row_err:
-                    results["failed"] += 1
-                    results["errors"].append(
-                        f"Row error (policy {row.get('policy_number', 'unknown')}): {str(row_err)}"
-                    )
-
-        except Exception as sheet_err:
-            results["errors"].append(f"Sheet '{sheet_name}' error: {str(sheet_err)}")
 
     db.commit()
     return results
