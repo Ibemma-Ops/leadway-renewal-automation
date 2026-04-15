@@ -5,18 +5,14 @@ export default {
     extend: {
       colors: {
         brand: {
-          blue:       "#002F6C",
-          "blue-700": "#003d8f",
-          "blue-800": "#002558",
-          "blue-50":  "#e8eef8",
-          "blue-100": "#c5d4ed",
-          red:        "#E30613",
-          "red-700":  "#b80510",
-          "red-50":   "#fde8e9",
+          red: "#E30613",
+          orange: "#F58220",
+          black: "#111111",
+          white: "#FFFFFF",
         },
       },
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Aptos", "Arial", "system-ui", "sans-serif"],
       },
       boxShadow: {
         card: "0 1px 3px 0 rgba(0,0,0,.08), 0 1px 2px -1px rgba(0,0,0,.06)",
