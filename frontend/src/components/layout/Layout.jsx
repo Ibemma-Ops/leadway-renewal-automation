@@ -35,9 +35,9 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      <aside className="w-72 bg-brand-black text-brand-white flex flex-col border-r border-white/10 shadow-2xl">
-        <div className="px-6 py-6 border-b border-white/10">
+    <div className="h-screen overflow-hidden bg-gray-100 flex">
+      <aside className="w-72 h-screen bg-brand-black text-brand-white flex flex-col border-r border-white/10 shadow-2xl">
+        <div className="px-6 py-6 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-white rounded-lg px-3 py-1.5 shadow-sm">
               <img
@@ -49,7 +49,7 @@ export default function Layout({ children }) {
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -73,7 +73,7 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        <div className="px-4 py-4 border-t border-white/10">
+        <div className="px-4 py-4 border-t border-white/10 shrink-0">
           <div className="rounded-2xl bg-white/5 px-4 py-4">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-full bg-brand-red text-brand-white flex items-center justify-center font-semibold">
@@ -100,8 +100,8 @@ export default function Layout({ children }) {
         </div>
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-20 bg-brand-white border-b border-gray-200 px-8 flex items-center justify-between shadow-sm">
+      <div className="flex-1 min-w-0 h-screen flex flex-col">
+        <header className="h-20 shrink-0 bg-brand-white border-b border-gray-200 px-8 flex items-center justify-between shadow-sm">
           <div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <span className="font-semibold text-brand-black">MRAS</span>
@@ -117,7 +117,7 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>
