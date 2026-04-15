@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import logo from "../assets/leadway-health.png";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -13,7 +14,10 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) return toast.error("Enter email and password");
+    if (!form.email || !form.password) {
+      return toast.error("Enter email and password");
+    }
+
     setLoading(true);
     try {
       await login(form.email, form.password);
@@ -34,8 +38,12 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex w-full flex-col justify-between p-12 xl:p-16">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-white text-brand-red text-2xl font-bold shadow-card-md">
-              LH
+            <div className="bg-white rounded-2xl px-3 py-2 shadow-card-md">
+              <img
+                src={logo}
+                alt="Leadway Health"
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <div>
               <p className="text-lg font-semibold">Leadway Health</p>
@@ -47,14 +55,15 @@ export default function LoginPage() {
             <p className="mb-4 inline-flex rounded-full bg-brand-white/10 px-4 py-1 text-xs font-medium tracking-wide text-white/80">
               Internal Operations Platform
             </p>
+
             <h1 className="text-5xl font-bold leading-tight">
               Monthly Renewal
               <br />
               Automation System
             </h1>
+
             <p className="mt-6 text-lg leading-8 text-white/75">
-              Automate the full renewal lifecycle from Excel ingestion and pricing logic
-              to approval workflow, document generation, and scheduled notice dispatch.
+              End-to-end renewal automation — ingestion, pricing, approvals, and dispatch.
             </p>
 
             <div className="mt-10 grid grid-cols-2 gap-4">
@@ -84,8 +93,12 @@ export default function LoginPage() {
       <div className="flex items-center justify-center bg-[#f8f8f8] px-6 py-10">
         <div className="w-full max-w-md">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-red text-brand-white text-xl font-bold">
-              LH
+            <div className="bg-white rounded-xl px-3 py-2 shadow-sm">
+              <img
+                src={logo}
+                alt="Leadway Health"
+                className="h-8 w-auto object-contain"
+              />
             </div>
             <div>
               <p className="font-semibold text-brand-black">Leadway Health</p>
