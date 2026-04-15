@@ -4,37 +4,37 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html { font-family: "Inter", sans-serif; }
-  body { @apply bg-gray-50 text-gray-900 antialiased; }
+  html { font-family: "Aptos", "Arial"; }
+  body { @apply bg-gray-50 text-brand-black antialiased; }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-blue text-white text-sm font-medium
-           hover:bg-brand-blue-700 active:bg-brand-blue-800 transition-colors duration-150 shadow-sm;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-red text-brand-white text-sm font-medium
+           hover:bg-brand-orange active:bg-brand-black transition-colors duration-150 shadow-sm;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-red text-white text-sm font-medium
-           hover:bg-brand-red-700 transition-colors duration-150 shadow-sm;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-red text-brand-white text-sm font-medium
+           hover:bg-brand-orange transition-colors duration-150 shadow-sm;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 text-sm font-medium
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-brand-black text-sm font-medium
            hover:bg-gray-100 transition-colors duration-150;
   }
   .btn-outline {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-brand-blue text-brand-blue text-sm font-medium
-           hover:bg-brand-blue-50 transition-colors duration-150;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-brand-red text-brand-red text-sm font-medium
+           hover:bg-brand-white transition-colors duration-150;
   }
   .card {
-    @apply bg-white rounded-xl shadow-card border border-gray-100 p-6;
+    @apply bg-brand-white rounded-xl shadow-card border border-gray-100 p-6;
   }
   .input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none
-           focus:ring-2 focus:ring-brand-blue focus:border-transparent transition;
+           focus:ring-2 focus:ring-brand-orange focus:border-transparent transition;
   }
   .select {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none
-           focus:ring-2 focus:ring-brand-blue focus:border-transparent transition;
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-brand-white focus:outline-none
+           focus:ring-2 focus:ring-brand-orange focus:border-transparent transition;
   }
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
