@@ -62,28 +62,6 @@ export default function LoginPage() {
               Automation System
             </h1>
 
-            <p className="mt-6 text-lg leading-8 text-white/75">
-              End-to-end renewal automation — ingestion, pricing, approvals, and dispatch.
-            </p>
-
-            <div className="mt-10 grid grid-cols-2 gap-4">
-              {[
-                ["Excel Ingestion", "Corporate, Retail & TPA"],
-                ["LR & COR Engine", "Real-time analytics"],
-                ["Approval Workflow", "Role-based sign-off"],
-                ["Auto Dispatch", "D-60, D-30, D-7, D-0"],
-              ].map(([title, subtitle]) => (
-                <div
-                  key={title}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm"
-                >
-                  <p className="text-sm font-semibold text-white">{title}</p>
-                  <p className="mt-1 text-sm text-white/65">{subtitle}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <p className="text-sm text-white/60">
             © {new Date().getFullYear()} Leadway Health Insurance Limited
           </p>
