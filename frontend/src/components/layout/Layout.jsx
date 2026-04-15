@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { cn } from "../../utils/helpers";
+import logo from "../../assets/leadway-health.png";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -38,13 +39,13 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className="w-72 bg-brand-black text-brand-white flex flex-col border-r border-white/10 shadow-2xl">
         <div className="px-6 py-6 border-b border-white/10">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-brand-red text-brand-white flex items-center justify-center text-xl font-bold shadow-card-md">
-              LH
-            </div>
-            <div>
-              <p className="text-base font-semibold leading-tight">Leadway Health</p>
-              <p className="text-sm text-white/60">MRAS Platform</p>
+          <div className="flex items-center gap-3">
+            <div className="bg-white rounded-lg px-3 py-1.5 shadow-sm">
+              <img
+                src={logo}
+                alt="Leadway Health"
+                className="h-8 w-auto object-contain"
+              />
             </div>
           </div>
         </div>
@@ -62,7 +63,7 @@ export default function Layout() {
                     "group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
                     isActive
                       ? "bg-brand-red text-brand-white shadow-md"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
                   )
                 }
               >
@@ -80,8 +81,12 @@ export default function Layout() {
                 {user?.full_name?.[0] || "A"}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">{user?.full_name || "System Administrator"}</p>
-                <p className="text-xs text-white/60 truncate">{user?.role || "ADMIN"}</p>
+                <p className="text-sm font-semibold truncate">
+                  {user?.full_name || "System Administrator"}
+                </p>
+                <p className="text-xs text-white/60 truncate">
+                  {user?.role || "ADMIN"}
+                </p>
               </div>
             </div>
 
