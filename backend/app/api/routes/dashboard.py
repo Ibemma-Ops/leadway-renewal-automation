@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case
+from sqlalchemy import func, case, cast, String
 from datetime import date, timedelta
 from typing import List, Optional
 
@@ -19,60 +19,99 @@ async def get_stats(
     current_user: User = Depends(get_current_user),
 ):
     today = date.today()
-    def cnt(s): return db.query(func.count(RenewalPolicy.id)).filter(RenewalPolicy.renewal_status == s).scalar() or 0
 
-    total    = db.query(func.count(RenewalPolicy.id)).scalar() or 0
-    tpa      = cnt(RenewalStatus.TPA_ROUTED)
+    def cnt(status_value):
+        return (
+            db.query(func.count(RenewalPolicy.id))
+            .filter(RenewalPolicy.renewal_status == status_value)
+            .scalar()
+            or 0
+        )
+
+    total = db.query(func.count(RenewalPolicy.id)).scalar() or 0
+    tpa = cnt(RenewalStatus.TPA_ROUTED)
     aw_sales = cnt(RenewalStatus.AWAITING_SALES_CONFIRMATION)
-    aw_uw    = (cnt(RenewalStatus.AWAITING_UNDERWRITER_APPROVAL) +
-                cnt(RenewalStatus.AWAITING_UNDERWRITER_ACKNOWLEDGEMENT))
-    aw_hbd   = cnt(RenewalStatus.AWAITING_HBD_APPROVAL)
-    aw_md    = cnt(RenewalStatus.AWAITING_MD_CEO_CONCURRENCE)
+    aw_uw = (
+        cnt(RenewalStatus.AWAITING_UNDERWRITER_APPROVAL)
+        + cnt(RenewalStatus.AWAITING_UNDERWRITER_ACKNOWLEDGEMENT)
+    )
+    aw_hbd = cnt(RenewalStatus.AWAITING_HBD_APPROVAL)
+    aw_md = cnt(RenewalStatus.AWAITING_MD_CEO_CONCURRENCE)
     approved = cnt(RenewalStatus.APPROVED)
-    sent     = cnt(RenewalStatus.NOTICE_SENT) + cnt(RenewalStatus.CONFIRMED)
-    lapsed   = cnt(RenewalStatus.LAPSED)
+    sent = cnt(RenewalStatus.NOTICE_SENT) + cnt(RenewalStatus.CONFIRMED)
+    lapsed = cnt(RenewalStatus.LAPSED)
     rejected = cnt(RenewalStatus.REJECTED)
 
-    discrepancy = db.query(func.count(RenewalPolicy.id)).filter(
-        RenewalPolicy.discrepancy_flagged == True
-    ).scalar() or 0
+    discrepancy = (
+        db.query(func.count(RenewalPolicy.id))
+        .filter(RenewalPolicy.discrepancy_flagged.is_(True))
+        .scalar()
+        or 0
+    )
 
-    premium_at_risk = db.query(
-        func.coalesce(func.sum(RenewalPolicy.renewal_premium), 0)
-    ).filter(
-        RenewalPolicy.renewal_status.notin_([
-            RenewalStatus.NOTICE_SENT, RenewalStatus.CONFIRMED,
-            RenewalStatus.LAPSED, RenewalStatus.REJECTED, RenewalStatus.TPA_ROUTED,
-        ])
-    ).scalar() or 0
+    premium_at_risk = (
+        db.query(func.coalesce(func.sum(RenewalPolicy.renewal_premium), 0))
+        .filter(
+            RenewalPolicy.renewal_status.notin_(
+                [
+                    RenewalStatus.NOTICE_SENT,
+                    RenewalStatus.CONFIRMED,
+                    RenewalStatus.LAPSED,
+                    RenewalStatus.REJECTED,
+                    RenewalStatus.TPA_ROUTED,
+                ]
+            )
+        )
+        .scalar()
+        or 0
+    )
 
-    avg_lr = db.query(func.avg(RenewalPolicy.lr)).filter(
-        RenewalPolicy.segment != PolicySegment.TPA
-    ).scalar() or 0.0
+    avg_lr = (
+        db.query(func.avg(RenewalPolicy.lr))
+        .filter(RenewalPolicy.segment != PolicySegment.TPA)
+        .scalar()
+        or 0.0
+    )
 
-    due_30 = db.query(func.count(RenewalPolicy.id)).filter(
-        RenewalPolicy.end_date.between(today, today + timedelta(days=30)),
-        RenewalPolicy.renewal_status != RenewalStatus.LAPSED,
-        RenewalPolicy.renewal_status != RenewalStatus.TPA_ROUTED,
-    ).scalar() or 0
+    due_30 = (
+        db.query(func.count(RenewalPolicy.id))
+        .filter(
+            RenewalPolicy.end_date.between(today, today + timedelta(days=30)),
+            RenewalPolicy.renewal_status != RenewalStatus.LAPSED,
+            RenewalPolicy.renewal_status != RenewalStatus.TPA_ROUTED,
+        )
+        .scalar()
+        or 0
+    )
 
-    due_7 = db.query(func.count(RenewalPolicy.id)).filter(
-        RenewalPolicy.end_date.between(today, today + timedelta(days=7)),
-        RenewalPolicy.renewal_status != RenewalStatus.LAPSED,
-        RenewalPolicy.renewal_status != RenewalStatus.TPA_ROUTED,
-    ).scalar() or 0
+    due_7 = (
+        db.query(func.count(RenewalPolicy.id))
+        .filter(
+            RenewalPolicy.end_date.between(today, today + timedelta(days=7)),
+            RenewalPolicy.renewal_status != RenewalStatus.LAPSED,
+            RenewalPolicy.renewal_status != RenewalStatus.TPA_ROUTED,
+        )
+        .scalar()
+        or 0
+    )
 
-    # Still in approval chain with <7 days to renewal
-    pending_at_risk = db.query(func.count(RenewalPolicy.id)).filter(
-        RenewalPolicy.end_date <= today + timedelta(days=7),
-        RenewalPolicy.renewal_status.in_([
-            RenewalStatus.AWAITING_SALES_CONFIRMATION,
-            RenewalStatus.AWAITING_UNDERWRITER_ACKNOWLEDGEMENT,
-            RenewalStatus.AWAITING_UNDERWRITER_APPROVAL,
-            RenewalStatus.AWAITING_HBD_APPROVAL,
-            RenewalStatus.AWAITING_MD_CEO_CONCURRENCE,
-        ])
-    ).scalar() or 0
+    pending_at_risk = (
+        db.query(func.count(RenewalPolicy.id))
+        .filter(
+            RenewalPolicy.end_date <= today + timedelta(days=7),
+            RenewalPolicy.renewal_status.in_(
+                [
+                    RenewalStatus.AWAITING_SALES_CONFIRMATION,
+                    RenewalStatus.AWAITING_UNDERWRITER_ACKNOWLEDGEMENT,
+                    RenewalStatus.AWAITING_UNDERWRITER_APPROVAL,
+                    RenewalStatus.AWAITING_HBD_APPROVAL,
+                    RenewalStatus.AWAITING_MD_CEO_CONCURRENCE,
+                ]
+            ),
+        )
+        .scalar()
+        or 0
+    )
 
     return DashboardStats(
         total_policies=total,
@@ -104,9 +143,12 @@ async def get_heatmap(
         RenewalPolicy.lr.isnot(None),
         RenewalPolicy.segment != PolicySegment.TPA,
     )
+
     if segment:
         q = q.filter(RenewalPolicy.segment == segment)
+
     policies = q.order_by(RenewalPolicy.cor.desc()).limit(100).all()
+
     return [
         HeatmapItem(
             company_name=p.company_name,
@@ -138,9 +180,10 @@ async def get_portfolio_summary(
         .group_by(RenewalPolicy.segment)
         .all()
     )
+
     return [
         PortfolioSummary(
-            segment=r.segment.value,
+            segment=r.segment.value if hasattr(r.segment, "value") else str(r.segment),
             count=r.count,
             total_premium=float(r.total_premium),
             avg_lr=round(float(r.avg_lr) * 100, 2),
@@ -155,6 +198,7 @@ async def renewal_timeline(
     current_user: User = Depends(get_current_user),
 ):
     today = date.today()
+
     rows = (
         db.query(
             func.date_trunc("month", RenewalPolicy.end_date).label("month"),
@@ -170,7 +214,15 @@ async def renewal_timeline(
         .limit(12)
         .all()
     )
-    return [{"month": str(r.month)[:7], "count": r.count, "premium": float(r.premium or 0)} for r in rows]
+
+    return [
+        {
+            "month": str(r.month)[:7],
+            "count": r.count,
+            "premium": float(r.premium or 0),
+        }
+        for r in rows
+    ]
 
 
 @router.get("/rate-distribution")
@@ -179,7 +231,10 @@ async def rate_distribution(
     current_user: User = Depends(get_current_user),
 ):
     rows = (
-        db.query(RenewalPolicy.rate_band, func.count(RenewalPolicy.id).label("count"))
+        db.query(
+            RenewalPolicy.rate_band,
+            func.count(RenewalPolicy.id).label("count"),
+        )
         .filter(
             RenewalPolicy.rate_band.isnot(None),
             RenewalPolicy.segment != PolicySegment.TPA,
@@ -187,6 +242,7 @@ async def rate_distribution(
         .group_by(RenewalPolicy.rate_band)
         .all()
     )
+
     return [{"band": r.rate_band, "count": r.count} for r in rows]
 
 
@@ -197,12 +253,19 @@ async def risk_flag_summary(
 ):
     """Count of policies per risk flag for dashboard indicators."""
     from app.models.renewal import RiskFlag
+
     result = {}
+    risk_flags_text = cast(RenewalPolicy.risk_flags, String)
+
     for flag in RiskFlag:
-        count = db.query(func.count(RenewalPolicy.id)).filter(
-            RenewalPolicy.risk_flags.contains([flag.value])
-        ).scalar() or 0
+        count = (
+            db.query(func.count(RenewalPolicy.id))
+            .filter(risk_flags_text.like(f'%"{flag.value}"%'))
+            .scalar()
+            or 0
+        )
         result[flag.value] = count
+
     return result
 
 
@@ -227,7 +290,12 @@ async def sector_lr(
         .limit(20)
         .all()
     )
+
     return [
-        {"sector": r.business_sector, "avg_lr": round((r.avg_lr or 0)*100, 2), "count": r.count}
+        {
+            "sector": r.business_sector,
+            "avg_lr": round((r.avg_lr or 0) * 100, 2),
+            "count": r.count,
+        }
         for r in rows
     ]
