@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.config import settings
-from app.models.user import User
-from app.models.operations import UploadBatch
+from app.models.user import User, UserRole
+from app.models.operations import UploadBatch, ApprovalWorkflow
+from app.models.renewal import RenewalPolicy
 from app.schemas import UploadBatchOut
 from app.services.ingestion_service import ingest_excel
 from app.services.audit_service import log_action
@@ -25,7 +26,6 @@ async def upload_excel(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Validate file extension
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -36,7 +36,6 @@ async def upload_excel(
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     file_path = os.path.join(settings.UPLOAD_DIR, f"batch_{file.filename}")
 
-    # Size check
     contents = await file.read()
     size_mb = len(contents) / (1024 * 1024)
     if size_mb > MAX_FILE_SIZE_MB:
@@ -48,7 +47,6 @@ async def upload_excel(
     with open(file_path, "wb") as f:
         f.write(contents)
 
-    # Create batch record
     batch = UploadBatch(
         filename=file.filename,
         uploaded_by=current_user.id,
@@ -58,11 +56,14 @@ async def upload_excel(
     db.commit()
     db.refresh(batch)
 
-    log_action(db, "FILE_UPLOADED", user_id=current_user.id,
-               description=f"Uploaded {file.filename}",
-               ip_address=request.client.host)
+    log_action(
+        db,
+        "FILE_UPLOADED",
+        user_id=current_user.id,
+        description=f"Uploaded {file.filename}",
+        ip_address=request.client.host
+    )
 
-    # Ingest synchronously (use Celery task for large files in prod)
     try:
         results = ingest_excel(file_path, db, batch.id, current_user.id)
         batch.total_records = results["total"]
@@ -80,12 +81,16 @@ async def upload_excel(
     db.commit()
     db.refresh(batch)
 
-    log_action(db, "INGESTION_COMPLETE", user_id=current_user.id,
-               event_metadata={
-                   "batch_id": batch.id,
-                   "processed": batch.processed_records,
-                   "failed": batch.failed_records,
-               })
+    log_action(
+        db,
+        "INGESTION_COMPLETE",
+        user_id=current_user.id,
+        event_metadata={
+            "batch_id": batch.id,
+            "processed": batch.processed_records,
+            "failed": batch.failed_records,
+        }
+    )
 
     return batch
 
@@ -108,3 +113,55 @@ async def get_batch(
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
     return batch
+
+
+@router.delete("/{batch_id}")
+async def delete_batch(
+    batch_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    batch = db.query(UploadBatch).filter(UploadBatch.id == batch_id).first()
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+
+    policy_ids = [
+        row[0]
+        for row in db.query(RenewalPolicy.id)
+        .filter(RenewalPolicy.batch_id == batch_id)
+        .all()
+    ]
+
+    if policy_ids:
+        db.query(ApprovalWorkflow).filter(
+            ApprovalWorkflow.policy_id.in_(policy_ids)
+        ).delete(synchronize_session=False)
+
+    db.query(RenewalPolicy).filter(
+        RenewalPolicy.batch_id == batch_id
+    ).delete(synchronize_session=False)
+
+    file_path = os.path.join(settings.UPLOAD_DIR, f"batch_{batch.filename}")
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+
+    db.delete(batch)
+    db.commit()
+
+    log_action(
+        db,
+        "UPLOAD_BATCH_DELETED",
+        user_id=current_user.id,
+        description=f"Deleted upload batch {batch.filename} (ID: {batch_id})",
+        ip_address=request.client.host,
+        event_metadata={"batch_id": batch_id},
+    )
+
+    return {"message": "Upload deleted successfully"}
