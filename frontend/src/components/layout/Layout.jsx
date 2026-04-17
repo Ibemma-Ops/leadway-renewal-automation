@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -10,6 +11,8 @@ import {
   LogOut,
   Bell,
   ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { cn } from "../../utils/helpers";
@@ -28,6 +31,7 @@ const navItems = [
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -36,16 +40,38 @@ export default function Layout({ children }) {
 
   return (
     <div className="h-screen overflow-hidden bg-gray-100 flex">
-      <aside className="w-72 h-screen bg-brand-black text-brand-white flex flex-col border-r border-white/10 shadow-2xl">
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-50 h-screen w-72 bg-brand-black text-brand-white flex flex-col border-r border-white/10 shadow-2xl transform transition-transform duration-300",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "lg:static lg:translate-x-0"
+        )}
+      >
         <div className="px-6 py-6 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-white rounded-lg px-3 py-1.5 shadow-sm">
-              <img
-                src={logo}
-                alt="Leadway Health"
-                className="h-8 w-auto object-contain"
-              />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white rounded-lg px-3 py-1.5 shadow-sm">
+                <img
+                  src={logo}
+                  alt="Leadway Health"
+                  className="h-8 w-auto object-contain"
+                />
+              </div>
             </div>
+
+            <button
+              className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X size={18} />
+            </button>
           </div>
         </div>
 
@@ -57,6 +83,7 @@ export default function Layout({ children }) {
                 key={item.to}
                 to={item.to}
                 end={item.to === "/"}
+                onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
                   cn(
                     "group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
@@ -101,12 +128,19 @@ export default function Layout({ children }) {
       </aside>
 
       <div className="flex-1 min-w-0 h-screen flex flex-col">
-        <header className="h-20 shrink-0 bg-brand-white border-b border-gray-200 px-8 flex items-center justify-between shadow-sm">
-          <div>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+        <header className="h-20 shrink-0 bg-brand-white border-b border-gray-200 px-4 lg:px-8 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 shrink-0"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={18} />
+            </button>
+
+            <div className="flex items-center gap-2 text-sm text-gray-400 min-w-0">
               <span className="font-semibold text-brand-black">MRAS</span>
-              <ChevronRight size={14} />
-              <span>Monthly Renewal Automation System</span>
+              <ChevronRight size={14} className="shrink-0" />
+              <span className="truncate">Monthly Renewal Automation System</span>
             </div>
           </div>
 
@@ -117,7 +151,7 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
       </div>
